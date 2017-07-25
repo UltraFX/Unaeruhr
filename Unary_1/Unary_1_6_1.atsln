@@ -1,0 +1,20 @@
+
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Unary_1", "Unary_1\Unary_1_6_1.cproj", "{DAB67736-B7C5-4942-B345-EC74E4B67943}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DAB67736-B7C5-4942-B345-EC74E4B67943}.Debug|AVR.ActiveCfg = Debug|AVR
+		{DAB67736-B7C5-4942-B345-EC74E4B67943}.Debug|AVR.Build.0 = Debug|AVR
+		{DAB67736-B7C5-4942-B345-EC74E4B67943}.Release|AVR.ActiveCfg = Release|AVR
+		{DAB67736-B7C5-4942-B345-EC74E4B67943}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

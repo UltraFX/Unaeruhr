@@ -1,0 +1,12 @@
+"ID";"Bezeichner";"Gehäuse";"Stückzahl";"Bezeichnung";"Anbieter und Ref.";
+1;"REF**,REF**,REF**,REF**";"1pin";4;"1pin";;;
+2;"REF**,REF**,REF**,REF**,REF**,REF**,REF**,REF**,REF**,REF**,REF**,REF**,REF**";"VIA-0.3mm";13;"VIA-0.3mm";;;
+3;"P1";"Pin_Header_Straight_2x07_Pitch2.54mm";1;"INPUT";;;
+4;"C1";"C_0805";1;"100n";;;
+5;"D1,D2,D3,D4,D5";"LED_D5.0mm-4";5;"LED_RCBG";;;
+6;"P2";"Pin_Header_Straight_2x07_Pitch2.54mm";1;"OUTPUT";;;
+7;"Q1,Q4,Q7";"SOT-23";3;"Q_PNP_BEC";;;
+8;"Q2,Q3,Q5,Q6,Q8";"SOT-23";5;"BC849";;;
+9;"R1,R2,R3,R5,R7,R8,R9,R11";"R_0805";8;"10k";;;
+10;"R4,R6,R10";"R_0805";3;"68";;;
+11;"U1";"SOIC-16_3.9x9.9mm_Pitch1.27mm";1;"74HC595";;;
