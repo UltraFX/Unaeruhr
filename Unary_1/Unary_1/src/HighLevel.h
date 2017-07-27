@@ -17,9 +17,26 @@ void mainProcedure(void);
 void effect1(void);
 void effect2(void);
 
+/* blink time in setup-mode */
 void blink(uint8_t bySection);
+
+/* Load current time from RTC */
 void loadTime(void);
+
+/* store current time on RTC */
 void storeTime(void);
+
+/* load Off (Start)-Time from EEPROM */
+void loadOffTime(void);
+
+/* load On (Stop)-Time from EEPROM */
+void loadOnTime(void);
+
+/* store Off (Start)-Time to EEPROM */
+void storeOffTime(void);
+
+/* store On (Stop)-Time to EEPROM */
+void storeOnTime(void);
 
 //effect-states
 enum{STATE_INTRO, STATE_RED, STATE_RED2, STATE_PINK, STATE_TURKEY, STATE_BLUE, STATE_GREEN, STATE_YELLOW, STATE_LAST, STATE_OFF};

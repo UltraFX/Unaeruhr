@@ -26,9 +26,11 @@
 #define STATE_LOAD			0xA
 #define STATE_LOAD_START	0xB
 #define STATE_LOAD_END		0xC
+#define STATE_STORE_START	0xD
+#define STATE_STORE_STOP	0xE
 
 extern uint8_t	g_byState;
-extern uint16_t	g_wButtonPressedCounter;
+extern uint16_t	g_wButtonPressedCounter1, g_wButtonPressedCounter2;
 uint8_t			g_byButtonFlag[3];
 
 #include <stdlib.h>

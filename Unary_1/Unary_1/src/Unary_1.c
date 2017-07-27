@@ -12,7 +12,8 @@ bool date = false;
 
 uint8_t		g_byState = STATE_CLOCK;
 uint8_t		g_byButtonFlag[3] = {0};
-uint16_t	g_wButtonPressedCounter = 0;
+uint16_t	g_wButtonPressedCounter1 = 0;
+uint16_t	g_wButtonPressedCounter2 = 0;
 
 int main(void)
 {
@@ -59,19 +60,26 @@ int main(void)
     while(1)
     {
 		//dcf77_run();
+		
+		/* Get button states */
 		buttons_handler();
 		
+		/* Main state machine */
 		switch(g_byState)
 		{
+		/* Init Clock */
 		case STATE_CLOCK_ENTRY:
 			g_byState = STATE_CLOCK;
 			break;
+		/* Show main clock */
 		case STATE_CLOCK:
 			mainProcedure();
 			break;
+		/* Init date display */	
 		case STATE_DATE_ENTRY:
 			g_byState = STATE_DATE;
 			break;
+		/* Show date */	
 		case STATE_DATE:
 			if(count_sec >= 10) 
 			{
@@ -82,6 +90,7 @@ int main(void)
 				showDate();
 			}
 			break;	
+		/* Set current date and time */	
 		case STATE_SET_MONTH:
 			blink(STATE_SET_MONTH);
 			break;
@@ -98,26 +107,40 @@ int main(void)
 			storeTime();
 			g_byState = STATE_CLOCK_ENTRY;
 			break;
+		/* load current time from RTC */	
 		case STATE_LOAD:
 			loadTime();
 			g_byState = STATE_SET_MONTH;
 			break;
+		/* load Off-Time from EEPROM */	
         case STATE_LOAD_START:
+			loadOffTime();
+			g_byState = STATE_SET_HOURS;
 			break;
+		/* Load On-Time from EEPROM */	
 		case STATE_LOAD_END:
+			loadOnTime();
+			g_byState = STATE_SET_HOURS;
 			break;
+		/* Store Off-Time to EEPROM */
+		case STATE_STORE_START:
+			storeOffTime();
+			g_byState = STATE_LOAD_END;
+			break;
+		/* Store On-Time to EEPROM */	
+		case STATE_STORE_STOP:
+			storeOnTime();
+			g_byState = STATE_CLOCK_ENTRY;
+			break;		
 		default:
 			g_byState = STATE_CLOCK_ENTRY;
 		}
 		
-		/*if( get_key_short( 1<<KEY0 )) {
-			date = true;
-			count_sec = 0;
-		}*/
-		
+		/* Switch to Time setup */
 		if(buttons_get_first())
 		{
-			if(g_wButtonPressedCounter >= 5)
+			/* Long press: Enter time setup mode */
+			if(g_wButtonPressedCounter1 >= 5)
 			{
 				g_byState = STATE_LOAD;
 			}
@@ -126,6 +149,7 @@ int main(void)
 				count_sec = 0;
 				switch(g_byState)
 				{
+				/* If button was pressed once, display date */	
 				case STATE_CLOCK:
 					g_byState = STATE_DATE_ENTRY;
 					break;
@@ -147,35 +171,29 @@ int main(void)
 		}
 		else
 		{
-			g_wButtonPressedCounter = 0;
+			g_wButtonPressedCounter1 = 0;
 			g_byButtonFlag[0] = 0;
 		}
 
+		/* Switch to Off-Setup */
 		if(buttons_get_second())
 		{
-			if(g_wButtonPressedCounter >= 5)
+			if(g_wButtonPressedCounter2 >= 5)
 			{
-				g_byState = STATE_LOAD;
+				g_byState = STATE_LOAD_START;
 			}
 			if(g_byButtonFlag[0] != 1)
 			{
 				count_sec = 0;
 				switch(g_byState)
 				{
-					case STATE_CLOCK:
-					g_byState = STATE_DATE_ENTRY;
-					break;
-					case STATE_SET_MONTH:
-					g_byState = STATE_SET_DAY;
-					break;
-					case STATE_SET_DAY:
-					g_byState = STATE_SET_HOURS;
-					break;
+					//case STATE_CLOCK:
+					//g_byState = STATE_LOAD_START;
 					case STATE_SET_HOURS:
 					g_byState = STATE_SET_MINUTES;
 					break;
 					case STATE_SET_MINUTES:
-					g_byState = STATE_STORE;
+					g_byState = STATE_STORE_START;
 					break;
 				}
 			}
@@ -183,7 +201,7 @@ int main(void)
 		}
 		else
 		{
-			g_wButtonPressedCounter = 0;
+			g_wButtonPressedCounter2 = 0;
 			g_byButtonFlag[0] = 0;
 		}
     }
