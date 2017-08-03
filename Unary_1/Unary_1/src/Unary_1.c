@@ -9,11 +9,13 @@
 #include "main.h"
 
 bool date = false;
+uint8_t bySetType = 0;
 
 uint8_t		g_byState = STATE_CLOCK;
 uint8_t		g_byButtonFlag[3] = {0};
 uint16_t	g_wButtonPressedCounter1 = 0;
 uint16_t	g_wButtonPressedCounter2 = 0;
+uint16_t	g_wButtonPressedCounter3 = 0;
 
 int main(void)
 {
@@ -74,6 +76,55 @@ int main(void)
 		/* Show main clock */
 		case STATE_CLOCK:
 			mainProcedure();
+			/* Switch to Time setup */
+			if(buttons_get_first())
+			{
+				/* Long press: Enter time setup mode */
+				if(g_wButtonPressedCounter1 >= 5)
+				{
+					bySetType = TYPE_TIME;
+					g_byState = STATE_LOAD;
+				}
+				if(g_byButtonFlag[0] != 1)
+				{
+					count_sec = 0;
+					g_byState = STATE_DATE_ENTRY;
+				}
+				g_byButtonFlag[0] = 1;
+			}
+			else
+			{
+				g_wButtonPressedCounter1 = 0;
+				g_byButtonFlag[0] = 0;
+			}
+
+			/* Switch to Off-Setup */
+			if(buttons_get_second())
+			{
+				if(g_wButtonPressedCounter2 >= 5)
+				{
+					bySetType = TYPE_OFF_TIME;
+					g_byState = STATE_LOAD_START;
+				}
+			}
+			else
+			{
+				g_wButtonPressedCounter2 = 0;
+			}
+			
+			/* Switch to Off-Setup */
+			if(buttons_get_third())
+			{
+				if(g_wButtonPressedCounter3 >= 5)
+				{
+					bySetType = TYPE_ON_TIME;
+					g_byState = STATE_LOAD_END;
+				}
+			}
+			else
+			{
+				g_wButtonPressedCounter3 = 0;
+			}
 			break;
 		/* Init date display */	
 		case STATE_DATE_ENTRY:
@@ -89,19 +140,102 @@ int main(void)
 			{
 				showDate();
 			}
+			
+			if(buttons_get_first())
+			{
+				/* Long press: Enter time setup mode */
+				if(g_wButtonPressedCounter1 >= 5)
+				{
+					bySetType = TYPE_TIME;
+					g_byState = STATE_LOAD;
+				}
+				g_byButtonFlag[0] = 1;
+			}
+			else
+			{
+				g_wButtonPressedCounter1 = 0;
+				g_byButtonFlag[0] = 0;
+			}
 			break;	
 		/* Set current date and time */	
 		case STATE_SET_MONTH:
 			blink(STATE_SET_MONTH);
+			
+			if(buttons_get_first())
+			{
+				if(g_byButtonFlag[0] != 1)
+				{
+					g_byState = STATE_SET_DAY;
+					g_byButtonFlag[0] = 1;	
+				}
+			}
+			else
+			{
+				g_byButtonFlag[0] = 0;
+			}
 			break;
 		case STATE_SET_DAY:
 			blink(STATE_SET_DAY);
+			
+			if(buttons_get_first())
+			{
+				if(g_byButtonFlag[0] != 1)
+				{
+					g_byState = STATE_SET_HOURS;
+					g_byButtonFlag[0] = 1;
+				}
+			}
+			else
+			{
+				g_byButtonFlag[0] = 0;
+			}
 			break;
 		case STATE_SET_HOURS:
 			blink(STATE_SET_HOURS);
+			
+			if(buttons_get_first())
+			{
+				if(g_byButtonFlag[0] != 1)
+				{
+					g_byState = STATE_SET_MINUTES;
+					g_byButtonFlag[0] = 1;
+				}
+			}
+			else
+			{
+				g_byButtonFlag[0] = 0;
+			}
 			break;
 		case STATE_SET_MINUTES:
 			blink(STATE_SET_MINUTES);
+			
+			if(buttons_get_first())
+			{
+				if(g_byButtonFlag[0] != 1)
+				{
+					switch(bySetType)
+					{
+						case TYPE_TIME:
+						g_byState = STATE_STORE;
+						break;
+						case TYPE_OFF_TIME:
+						g_byState = STATE_STORE_START;
+						break;
+						case TYPE_ON_TIME:
+						g_byState = STATE_STORE_END;
+						break;
+						default:
+						g_byState = STATE_CLOCK_ENTRY;
+						break;
+					}
+					g_wButtonPressedCounter1 = 0;
+					g_byButtonFlag[0] = 1;
+				}
+			}
+			else
+			{
+				g_byButtonFlag[0] = 0;
+			}
 			break;
 		case STATE_STORE:
 			storeTime();
@@ -125,10 +259,10 @@ int main(void)
 		/* Store Off-Time to EEPROM */
 		case STATE_STORE_START:
 			storeOffTime();
-			g_byState = STATE_LOAD_END;
+			g_byState = STATE_CLOCK_ENTRY;
 			break;
 		/* Store On-Time to EEPROM */	
-		case STATE_STORE_STOP:
+		case STATE_STORE_END:
 			storeOnTime();
 			g_byState = STATE_CLOCK_ENTRY;
 			break;		
@@ -136,73 +270,6 @@ int main(void)
 			g_byState = STATE_CLOCK_ENTRY;
 		}
 		
-		/* Switch to Time setup */
-		if(buttons_get_first())
-		{
-			/* Long press: Enter time setup mode */
-			if(g_wButtonPressedCounter1 >= 5)
-			{
-				g_byState = STATE_LOAD;
-			}
-			if(g_byButtonFlag[0] != 1)
-			{
-				count_sec = 0;
-				switch(g_byState)
-				{
-				/* If button was pressed once, display date */	
-				case STATE_CLOCK:
-					g_byState = STATE_DATE_ENTRY;
-					break;
-				case STATE_SET_MONTH:
-					g_byState = STATE_SET_DAY;
-					break;
-				case STATE_SET_DAY:
-					g_byState = STATE_SET_HOURS;
-					break;
-				case STATE_SET_HOURS:
-					g_byState = STATE_SET_MINUTES;
-					break;
-				case STATE_SET_MINUTES:
-					g_byState = STATE_STORE;
-					break;
-				}
-			}
-			g_byButtonFlag[0] = 1;
-		}
-		else
-		{
-			g_wButtonPressedCounter1 = 0;
-			g_byButtonFlag[0] = 0;
-		}
-
-		/* Switch to Off-Setup */
-		if(buttons_get_second())
-		{
-			if(g_wButtonPressedCounter2 >= 5)
-			{
-				g_byState = STATE_LOAD_START;
-			}
-			if(g_byButtonFlag[0] != 1)
-			{
-				count_sec = 0;
-				switch(g_byState)
-				{
-					//case STATE_CLOCK:
-					//g_byState = STATE_LOAD_START;
-					case STATE_SET_HOURS:
-					g_byState = STATE_SET_MINUTES;
-					break;
-					case STATE_SET_MINUTES:
-					g_byState = STATE_STORE_START;
-					break;
-				}
-			}
-			g_byButtonFlag[0] = 1;
-		}
-		else
-		{
-			g_wButtonPressedCounter2 = 0;
-			g_byButtonFlag[0] = 0;
-		}
+		
     }
 }

@@ -45,6 +45,7 @@ void intSeconds(void)
 	count_sec++;
 	g_wButtonPressedCounter1++;
 	g_wButtonPressedCounter2++;
+	g_wButtonPressedCounter3++;
 	byPressCount++;
 }
 
@@ -70,13 +71,13 @@ void intMilliseconds(void)
 
 void testInit(void)
 {
+		eep_get_time(TIME_START, &start_hour, &start_minute);
+		eep_get_time(TIME_END, &stop_hour, &stop_minute);
 }
 
 void loadTime(void)
 {
 	Read_DS1307();
-	eep_get_time(TIME_END, &start_hour, &start_minute);
-	eep_get_time(TIME_END, &stop_hour, &stop_minute);
 
 	byMonths = rtc_data[5];
 	byDays = rtc_data[4];
@@ -86,7 +87,7 @@ void loadTime(void)
 
 void loadOffTime(void)
 {
-	eep_get_time(TIME_END, &stop_hour, &stop_minute);
+	eep_get_time(TIME_START, &stop_hour, &stop_minute);
 	
 	byMonths = 0;
 	byDays = 0;
@@ -306,20 +307,44 @@ void blink(uint8_t bySection)
 void mainProcedure(void)
 {
 	
+	uint8_t bTimeOn = 0;
+	
 	if(secInt)
 	{
 		Read_DS1307();
 	}
 	
+	if(start_hour > stop_hour)
+	{
+		if(((rtc_data[2] == start_hour) && rtc_data[1] < start_minute) || rtc_data[2] < start_hour)
+		{
+			if(((rtc_data[2] == stop_hour) && rtc_data[1] > stop_minute) || rtc_data[2] > stop_hour)
+			{
+				bTimeOn = 1;
+			}
+		}
+	}
+	else
+	{
+		if(((rtc_data[2] == start_hour) && rtc_data[1] > start_minute) || rtc_data[2] > start_hour)
+		{
+			if(((rtc_data[2] == stop_hour) && rtc_data[1] < stop_minute) || rtc_data[2] < stop_hour)
+			{
+				bTimeOn = 1;
+			}
+		}
+	}
+	
 	/* check if time is out of On-/Off-Time */
-	if(	((start_hour > stop_hour) &&
+	/*if(	((start_hour > stop_hour) &&
 		(((rtc_data[2] == start_hour) && (rtc_data[1] <= start_minute)) || (rtc_data[2] < start_hour)) &&
 		(((rtc_data[2] == stop_hour) && (rtc_data[1] >= stop_minute)) || (rtc_data[2] > stop_hour)))
 		|| 
 		((start_hour < stop_hour) &&
 		(((rtc_data[2] == start_hour) && (rtc_data[1] >= start_minute)) || (rtc_data[2] > start_hour)) &&
 		(((rtc_data[2] == stop_hour) && (rtc_data[1] <= stop_minute)) || (rtc_data[2] < stop_hour)))
-		)
+		)*/
+	if(bTimeOn)
 	{
 		/* run effect 30s before the next hour */
 		if(rtc_data[1] > 58 && rtc_data[0] > 30) 
