@@ -2,6 +2,7 @@
  * DCF77.h
  *
  * Created: 21.04.2017 23:36:08
+ *  Author: Nicolas Dammin
  */ 
 
 
