@@ -21,6 +21,12 @@ uint16_t	wNumberDelay = 0;
 
 static uint8_t byMonths = 4, byDays = 27, byHours = 3, byMinutes = 15;
 
+/* Hours and Minutes of Off-Time */
+uint8_t stop_hour = 0, stop_minute = 0;
+
+/* Hours and Minutes of On-Time */
+uint8_t start_hour = 0, start_minute = 0;
+
 uint8_t seconds = 0, minutes = 0, hours = 0, eff_col_state = STATE_INTRO, eff_num_state = 0, eff_color = RED, eff_pre_color = RED;
 bool secInt = false, effect_change = false;
 uint8_t effectNr = 0;
@@ -35,10 +41,12 @@ uint16_t eff_sec_ones = 0,
 
 void intSeconds(void)
 {
-		secInt = true;
-		count_sec++;
-		g_wButtonPressedCounter++;
-		byPressCount++;
+	secInt = true;
+	count_sec++;
+	g_wButtonPressedCounter1++;
+	g_wButtonPressedCounter2++;
+	g_wButtonPressedCounter3++;
+	byPressCount++;
 }
 
 void intMilliseconds(void)
@@ -63,6 +71,8 @@ void intMilliseconds(void)
 
 void testInit(void)
 {
+		eep_get_time(TIME_START, &start_hour, &start_minute);
+		eep_get_time(TIME_END, &stop_hour, &stop_minute);
 }
 
 void loadTime(void)
@@ -73,6 +83,26 @@ void loadTime(void)
 	byDays = rtc_data[4];
 	byHours = rtc_data[2];
 	byMinutes = rtc_data[1];
+}
+
+void loadOffTime(void)
+{
+	eep_get_time(TIME_START, &stop_hour, &stop_minute);
+	
+	byMonths = 0;
+	byDays = 0;
+	byHours = stop_hour;
+	byMinutes = stop_minute;
+}
+
+void loadOnTime(void)
+{	
+	eep_get_time(TIME_END, &start_hour, &start_minute);
+	
+	byMonths = 0;
+	byDays = 0;
+	byHours = start_hour;
+	byMinutes = start_minute;
 }
 
 void storeTime(void)
@@ -87,6 +117,17 @@ void storeTime(void)
 	Write_DS1307();
 }
 
+void storeOffTime(void)
+{
+	eep_set_time(TIME_START, &byHours, &byMinutes);
+}
+
+void storeOnTime(void)
+{
+	eep_set_time(TIME_END, &byHours, &byMinutes);
+}
+
+/* Blinking routine to setup clock or On-/Off-Time */
 void blink(uint8_t bySection)
 {
 	static uint8_t byBlinkState;
@@ -98,6 +139,7 @@ void blink(uint8_t bySection)
 		byBlinkState ^= 1;
 	}
 
+	/* Light on */
 	if(byBlinkState == 1)
 	{
 		switch(bySection)
@@ -138,6 +180,7 @@ void blink(uint8_t bySection)
 		}
 	}
 	else 
+	/* Light off */
 	{
 		switch(bySection)
 		{
@@ -156,8 +199,10 @@ void blink(uint8_t bySection)
 		}
 	}
 
+	/* decrease time */
 	if(buttons_get_second())
 	{
+		/* single press */
 		if(g_byButtonFlag[1] != 1)
 		{
 			byPressCount = 0;
@@ -165,30 +210,35 @@ void blink(uint8_t bySection)
 			count_sec = 0;
 			if(pbyTime != NULL)
 			{
+				/* underflow: Set maximum time */
 				if(*pbyTime == bySetMin)
 				{
 					*pbyTime = bySetMax;
 				}
 				else
 				{
+					/* decrease by 1 */
 					*pbyTime = *pbyTime - 1;
 				}
 			}
 		}
 		g_byButtonFlag[1] = 1;
 
+		/* automatic decrease when button stays pressed */
 		if(byPressCount >= 2)
 		{
 			if(wNumberDelay >= 200)
 			{
 				if(pbyTime != NULL)
 				{
+					/* underflow: Set maximum time */
 					if(*pbyTime == bySetMin)
 					{
 						*pbyTime = bySetMax;
 					}
 					else
 					{
+						/* decrease by 1 */
 						*pbyTime = *pbyTime - 1;
 					}
 				}
@@ -201,8 +251,10 @@ void blink(uint8_t bySection)
 		g_byButtonFlag[1] = 0;
 	}
 
+	/* increase time */
 	if(buttons_get_third())
 	{
+		/* single press */
 		if(g_byButtonFlag[2] != 1)
 		{
 			byPressCount = 0;
@@ -210,30 +262,35 @@ void blink(uint8_t bySection)
 			count_sec = 0;
 			if(pbyTime != NULL)
 			{
+				/* overflow: Set minimum time */
 				if(*pbyTime == bySetMax)
 				{
 					*pbyTime = bySetMin;
 				}
 				else
 				{
+					/* increase by one */
 					*pbyTime = *pbyTime + 1;
 				}
 			}
 		}
 		g_byButtonFlag[2] = 1;
 
+		/* automatic decrease when button stays pressed */
 		if(byPressCount >= 2)
 		{
 			if(wNumberDelay >= 200)
 			{
 				if(pbyTime != NULL)
 				{
+					/* overflow: Set minimum time */
 					if(*pbyTime == bySetMax)
 					{
 						*pbyTime = bySetMin;
 					}
 					else
 					{
+						/* increase by one */
 						*pbyTime = *pbyTime + 1;
 					}
 				}
@@ -249,28 +306,80 @@ void blink(uint8_t bySection)
 
 void mainProcedure(void)
 {
-	if(rtc_data[1] > 58 && rtc_data[0] > 30) {
-		if(effectNr == 0)
-			effect1();
-		else
-			effect2();
-	}
-		
+	
+	uint8_t bTimeOn = 0;
+	
 	if(secInt)
 	{
-		secInt = false;
-		
 		Read_DS1307();
 		
-		if(!(rtc_data[1] > 58 && rtc_data[0] > 30)) {
-			effectNr = (rtc_data[2]%2 == 0)?0:1;
-			setSeconds(rtc_data[0], BLUE, BLUE, BLUE | GREEN);
-			setMinutes(rtc_data[1], GREEN, GREEN, GREEN | RED);
-			setHours(rtc_data[2], RED, RED, RED | BLUE);
-			
-			if(rtc_data[0]%10 == 9)
-			lightRest(GREEN | RED);
+		PORTD ^= (1 << PD4);
+	}
+	
+	if(start_hour > stop_hour)
+	{
+		if(((rtc_data[2] == start_hour) && rtc_data[1] < start_minute) || rtc_data[2] < start_hour)
+		{
+			if(((rtc_data[2] == stop_hour) && rtc_data[1] > stop_minute) || rtc_data[2] > stop_hour)
+			{
+				bTimeOn = 1;
+			}
 		}
+	}
+	else
+	{
+		if(((rtc_data[2] == start_hour) && rtc_data[1] > start_minute) || rtc_data[2] > start_hour)
+		{
+			if(((rtc_data[2] == stop_hour) && rtc_data[1] < stop_minute) || rtc_data[2] < stop_hour)
+			{
+				bTimeOn = 1;
+			}
+		}
+	}
+	//bTimeOn = 1;
+	
+	/* check if time is out of On-/Off-Time */
+	/*if(	((start_hour > stop_hour) &&
+		(((rtc_data[2] == start_hour) && (rtc_data[1] <= start_minute)) || (rtc_data[2] < start_hour)) &&
+		(((rtc_data[2] == stop_hour) && (rtc_data[1] >= stop_minute)) || (rtc_data[2] > stop_hour)))
+		|| 
+		((start_hour < stop_hour) &&
+		(((rtc_data[2] == start_hour) && (rtc_data[1] >= start_minute)) || (rtc_data[2] > start_hour)) &&
+		(((rtc_data[2] == stop_hour) && (rtc_data[1] <= stop_minute)) || (rtc_data[2] < stop_hour)))
+		)*/
+	if(bTimeOn)
+	{
+		/* run effect 30s before the next hour */
+		if(rtc_data[1] > 58 && rtc_data[0] > 30) 
+		{
+			if(effectNr == 0)
+				effect1();
+			else
+				effect2();
+		}
+	
+		/* Update display each second */
+		if(secInt)
+		{
+			secInt = false;
+			
+			if(!(rtc_data[1] > 58 && rtc_data[0] > 30)) 
+			{
+				effectNr = (rtc_data[2]%2 == 0)?0:1;
+				setSeconds(rtc_data[0], BLUE, BLUE, BLUE | GREEN);
+				setMinutes(rtc_data[1], GREEN, GREEN, GREEN | RED);
+				setHours(rtc_data[2], RED, RED, RED | BLUE);
+				
+				if(rtc_data[0]%10 == 9)
+				lightRest(GREEN | RED);
+			}
+		}	
+	}
+	else 
+	{
+		setSeconds(0, BLUE, BLUE, BLUE | GREEN);
+		setMinutes(0, GREEN, GREEN, GREEN | RED);
+		setHours(0, RED, RED, RED | BLUE);
 	}
 }
 

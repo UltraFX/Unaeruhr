@@ -32,7 +32,10 @@ void SPI_Interrupt(void);
 void set_led(uint8_t reg, uint8_t bit, uint8_t color, uint8_t col_five);
 void reset_led(uint8_t reg, uint8_t bit, uint8_t color);
 
+/* Load time data from EEPROM */
 void eep_get_time(uint8_t byTime, uint8_t *pbyHour, uint8_t *pbyMin);
+
+/* Store time data on EEPROM */
 void eep_set_time(uint8_t byTime, uint8_t *pbyHour, uint8_t *pbyMin);
 
 

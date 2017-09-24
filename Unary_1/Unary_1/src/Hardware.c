@@ -196,6 +196,7 @@ ISR(TIMER1_COMPA_vect)
 	{
 		intSeconds();
 		millisecs = 0;
+		PORTD ^= (1 << PD3);
 	}
 	else
 		millisecs++;

@@ -173,7 +173,7 @@ void eep_set_time(uint8_t byTime, uint8_t *pbyHour, uint8_t *pbyMin)
 	}
 	else
 	{
-		eeprom_update_byte(&endTime[0], *pbyHour);
-		eeprom_update_byte(&endTime[1], *pbyMin);
+		eeprom_write_byte(&endTime[0], *pbyHour);
+		eeprom_write_byte(&endTime[1], *pbyMin);
 	}
 }
