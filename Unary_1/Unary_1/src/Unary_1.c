@@ -21,6 +21,7 @@ int main(void)
 {
 	
 	DDRD |= (1 << PD3) | (1 << PD4);
+	DDRC &= ~(1 << PC2);
 	PORTD = 0x00;// |= (1 << PD5);
 	
 	initSPI(); //initialize SPI for driving shift registers of the LEDs
@@ -40,10 +41,10 @@ int main(void)
 	
 	/*new_time[0] = 00; //Seconds
 	new_time[1] = 55; //Minutes
-	new_time[2] = 20; //Hours
+	new_time[2] = 19; //Hours
 	new_time[3] = 00; //kp
-	new_time[4] = 04; //Day
-	new_time[5] = 07; //Month
+	new_time[4] = 21; //Day
+	new_time[5] = 9; //Month
 	new_time[6] = 17; //Year
 	Write_DS1307();*/
 	
@@ -65,6 +66,15 @@ int main(void)
 		
 		/* Get button states */
 		buttons_handler();
+		
+		/*if(PINC & (1 << PC2))
+		{
+			PORTD |= (1 << PD3);
+		}
+		else
+		{
+			PORTD &= ~(1 << PD3);
+		}*/
 		
 		/* Main state machine */
 		switch(g_byState)

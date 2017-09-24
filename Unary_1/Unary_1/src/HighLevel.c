@@ -312,6 +312,8 @@ void mainProcedure(void)
 	if(secInt)
 	{
 		Read_DS1307();
+		
+		PORTD ^= (1 << PD4);
 	}
 	
 	if(start_hour > stop_hour)
@@ -334,6 +336,7 @@ void mainProcedure(void)
 			}
 		}
 	}
+	//bTimeOn = 1;
 	
 	/* check if time is out of On-/Off-Time */
 	/*if(	((start_hour > stop_hour) &&

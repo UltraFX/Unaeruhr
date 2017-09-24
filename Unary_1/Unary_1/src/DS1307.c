@@ -136,9 +136,7 @@ void Write_DS1307(void)
 
 void Start_DS1307(void)
 {
-	Read_DS1307();
-
-	rtc_data[0]=rtc_data[0] & 0x7F;
+	rtc_data[0] = 0;
 
 	// Start the I2C Write Transmission
 	i2c_start(DS1307_ID,DS1307_ADDR,TW_WRITE, 0);
@@ -146,6 +144,19 @@ void Start_DS1307(void)
 	i2c_write(0x00);
 
 	i2c_write(rtc_data[0]);
+
+	/*i2c_write(0xFF); //Enable 1Hz Squarewave generation (interrupt)
+	// Stop I2C Transmission
+	*/
+
+	i2c_stop();
+	
+	// Start the I2C Write Transmission
+	i2c_start(DS1307_ID,DS1307_ADDR,TW_WRITE, 0);
+	// Start from Address 0x00
+	i2c_write(0x07);
+
+	i2c_write(0xFF);
 
 	/*i2c_write(0xFF); //Enable 1Hz Squarewave generation (interrupt)
 	// Stop I2C Transmission
