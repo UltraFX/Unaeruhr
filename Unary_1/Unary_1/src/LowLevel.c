@@ -84,7 +84,7 @@ void SPI_Interrupt(void)
 	if(reg_count >= 6) //All 6 Bytes for all Registers sent
 	{			
 		if(!(led_r[reg_nr] & left_shift))PORTB |= (1 << RED_PIN);		//Check if red signal should be enabled for current selected LED
-		if(!(led_g[reg_nr] & left_shift))PORTB |= (1 << GREEN_PIN);	//Check if green signal should be enabled for current selected LED
+		if(!(led_g[reg_nr] & left_shift))PORTB |= (1 << GREEN_PIN);		//Check if green signal should be enabled for current selected LED
 		if(!(led_b[reg_nr] & left_shift))PORTB |= (1 << BLUE_PIN);		//Check if blue signal should be enabled for current selected LED
 		
 		PORTB |= (1 << LATCH_PIN);	//Enable Latch -> Enable current LED
