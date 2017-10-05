@@ -28,10 +28,9 @@ uint8_t stop_hour = 0, stop_minute = 0;
 uint8_t start_hour = 0, start_minute = 0;
 
 uint8_t seconds = 0, minutes = 0, hours = 0, eff_col_state = STATE_INTRO, eff_num_state = 0, eff_color = RED, eff_pre_color = RED;
-volatile bool secInt = false, effect_change = false;
+bool secInt = false, effect_change = false;
 uint8_t effectNr = 0;
 uint32_t mSeconds = 0;
-volatile uint8_t bySecOld, bySec;
 
 uint16_t eff_sec_ones = 0,
 		 eff_sec_tens = 0,
@@ -48,11 +47,6 @@ void intSeconds(void)
 	g_wButtonPressedCounter2++;
 	g_wButtonPressedCounter3++;
 	byPressCount++;
-	bySec++;
-	if(bySec == 60)
-	{
-		bySec = 0;
-	}
 }
 
 void intMilliseconds(void)
@@ -315,12 +309,10 @@ void mainProcedure(void)
 	
 	uint8_t bTimeOn = 0;
 	
-	PORTD ^= (1 << PD3);
-	
-	if(bySec > bySecOld)
+	if(secInt)
 	{
 		Read_DS1307();
-
+		
 		PORTD ^= (1 << PD4);
 	}
 	
@@ -355,22 +347,23 @@ void mainProcedure(void)
 		(((rtc_data[2] == start_hour) && (rtc_data[1] >= start_minute)) || (rtc_data[2] > start_hour)) &&
 		(((rtc_data[2] == stop_hour) && (rtc_data[1] <= stop_minute)) || (rtc_data[2] < stop_hour)))
 		)*/
-	
-	if(1)//bTimeOn)
+	if(bTimeOn)
 	{
 		/* run effect 30s before the next hour */
-		if(rtc_data[1] > 58 && rtc_data[0] > 30)
+		if(rtc_data[1] > 58 && rtc_data[0] > 30) 
 		{
 			if(effectNr == 0)
-			effect1();
+				effect1();
 			else
-			effect2();
+				effect2();
 		}
-		
+	
 		/* Update display each second */
-		if(bySec != bySecOld)
+		if(secInt)
 		{
-			if(!(rtc_data[1] > 58 && rtc_data[0] > 30))
+			secInt = false;
+			
+			if(!(rtc_data[1] > 58 && rtc_data[0] > 30)) 
 			{
 				effectNr = (rtc_data[2]%2 == 0)?0:1;
 				setSeconds(rtc_data[0], BLUE, BLUE, BLUE | GREEN);
@@ -380,21 +373,18 @@ void mainProcedure(void)
 				if(rtc_data[0]%10 == 9)
 				lightRest(GREEN | RED);
 			}
-		}
+		}	
 	}
-	else
+	else 
 	{
 		setSeconds(0, BLUE, BLUE, BLUE | GREEN);
 		setMinutes(0, GREEN, GREEN, GREEN | RED);
 		setHours(0, RED, RED, RED | BLUE);
 	}
-	
-	bySec = bySecOld;
-	
 }
 
 void showDate(void) {
-	if(secInt != false) {
+	if(secInt) {
 		secInt = false;
 		
 		Read_DS1307();

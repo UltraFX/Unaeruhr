@@ -21,7 +21,7 @@ void initSPI(void)
 	//PORTB |= (1<<RES_PIN); //Reset high -> NO RESET
 	
 	//SPSR = 0x01; //Set SPI2X
-	SPCR = (1<<SPIE) | (1<<SPE) | (1<<MSTR) | (1 << SPR0) | (1<<SPR1) ; //Enable SPI, set to master and Clock Rate 1/16 (1 MHz)
+	SPCR = (1<<SPIE) | (1<<SPE) | (1<<MSTR) | (1<<SPR0); //Enable SPI, set to master and Clock Rate 1/16 (1 MHz)
 	
 	SPDR = 0x00;
 }
@@ -196,6 +196,7 @@ ISR(TIMER1_COMPA_vect)
 	{
 		intSeconds();
 		millisecs = 0;
+		PORTD ^= (1 << PD3);
 	}
 	else
 		millisecs++;
