@@ -28,8 +28,9 @@ uint8_t stop_hour = 0, stop_minute = 0;
 uint8_t start_hour = 0, start_minute = 0;
 
 uint8_t seconds = 0, minutes = 0, hours = 0, eff_col_state = STATE_INTRO, eff_num_state = 0, eff_color = RED, eff_pre_color = RED;
-bool secInt = false, effect_change = false;
-uint8_t effectNr = 0;
+volatile uint8_t secInt = 0;
+uint8_t effect_change = false;
+uint8_t effectNr = 0, bTimeOn = 0;;
 uint32_t mSeconds = 0;
 
 uint16_t eff_sec_ones = 0,
@@ -41,7 +42,7 @@ uint16_t eff_sec_ones = 0,
 
 void intSeconds(void)
 {
-	secInt = true;
+	secInt = 1;
 	count_sec++;
 	g_wButtonPressedCounter1++;
 	g_wButtonPressedCounter2++;
@@ -305,49 +306,40 @@ void blink(uint8_t bySection)
 }
 
 void mainProcedure(void)
-{
-	
-	uint8_t bTimeOn = 0;
-	
-	if(secInt)
+{	
+	if(secInt != 0)
 	{
-		Read_DS1307();
-		
 		PORTD ^= (1 << PD4);
-	}
-	
-	if(start_hour > stop_hour)
-	{
-		if(((rtc_data[2] == start_hour) && rtc_data[1] < start_minute) || rtc_data[2] < start_hour)
+		
+		cli();
+		bTimeOn = 0;
+		
+		if(start_hour > stop_hour)
 		{
-			if(((rtc_data[2] == stop_hour) && rtc_data[1] > stop_minute) || rtc_data[2] > stop_hour)
+			if(((rtc_data[2] == start_hour) && rtc_data[1] < start_minute) || rtc_data[2] < start_hour)
 			{
-				bTimeOn = 1;
+				if(((rtc_data[2] == stop_hour) && rtc_data[1] > stop_minute) || rtc_data[2] > stop_hour)
+				{
+					bTimeOn = 1;
+				}
 			}
 		}
-	}
-	else
-	{
-		if(((rtc_data[2] == start_hour) && rtc_data[1] > start_minute) || rtc_data[2] > start_hour)
+		else
 		{
-			if(((rtc_data[2] == stop_hour) && rtc_data[1] < stop_minute) || rtc_data[2] < stop_hour)
+			if(((rtc_data[2] == start_hour) && rtc_data[1] > start_minute) || rtc_data[2] > start_hour)
 			{
-				bTimeOn = 1;
+				if(((rtc_data[2] == stop_hour) && rtc_data[1] < stop_minute) || rtc_data[2] < stop_hour)
+				{
+					bTimeOn = 1;
+				}
 			}
 		}
+		sei();
+		
+		Read_DS1307();
 	}
-	//bTimeOn = 1;
 	
-	/* check if time is out of On-/Off-Time */
-	/*if(	((start_hour > stop_hour) &&
-		(((rtc_data[2] == start_hour) && (rtc_data[1] <= start_minute)) || (rtc_data[2] < start_hour)) &&
-		(((rtc_data[2] == stop_hour) && (rtc_data[1] >= stop_minute)) || (rtc_data[2] > stop_hour)))
-		|| 
-		((start_hour < stop_hour) &&
-		(((rtc_data[2] == start_hour) && (rtc_data[1] >= start_minute)) || (rtc_data[2] > start_hour)) &&
-		(((rtc_data[2] == stop_hour) && (rtc_data[1] <= stop_minute)) || (rtc_data[2] < stop_hour)))
-		)*/
-	if(bTimeOn)
+	if(bTimeOn != 0)
 	{
 		/* run effect 30s before the next hour */
 		if(rtc_data[1] > 58 && rtc_data[0] > 30) 
@@ -359,9 +351,11 @@ void mainProcedure(void)
 		}
 	
 		/* Update display each second */
-		if(secInt)
+		if(secInt != 0)
 		{
-			secInt = false;
+			cli();
+			secInt = 0;
+			sei();
 			
 			if(!(rtc_data[1] > 58 && rtc_data[0] > 30)) 
 			{
@@ -377,6 +371,10 @@ void mainProcedure(void)
 	}
 	else 
 	{
+		cli();
+		secInt = 0;
+		sei();
+		
 		setSeconds(0, BLUE, BLUE, BLUE | GREEN);
 		setMinutes(0, GREEN, GREEN, GREEN | RED);
 		setHours(0, RED, RED, RED | BLUE);
@@ -384,8 +382,10 @@ void mainProcedure(void)
 }
 
 void showDate(void) {
-	if(secInt) {
-		secInt = false;
+	if(secInt != 0) {
+		cli();
+		secInt = 0;
+		sei();
 		
 		Read_DS1307();
 		

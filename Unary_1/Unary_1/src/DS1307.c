@@ -94,6 +94,7 @@ int8_t Read_DS1307(void)
 	
    // Stop I2C Transmission
    i2c_stop();
+  
    
    return 0;
 }

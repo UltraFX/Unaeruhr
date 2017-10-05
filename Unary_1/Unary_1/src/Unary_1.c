@@ -27,7 +27,6 @@ int main(void)
 	initSPI(); //initialize SPI for driving shift registers of the LEDs
 	initTimer();
 	initUART();
-	dcf77_init();
 	buttons_init();
 	
 	if(initTWI(100000))
@@ -40,11 +39,11 @@ int main(void)
 	}
 	
 	/*new_time[0] = 00; //Seconds
-	new_time[1] = 55; //Minutes
-	new_time[2] = 19; //Hours
+	new_time[1] = 35; //Minutes
+	new_time[2] = 20; //Hours
 	new_time[3] = 00; //kp
-	new_time[4] = 21; //Day
-	new_time[5] = 9; //Month
+	new_time[4] = 05; //Day
+	new_time[5] = 10; //Month
 	new_time[6] = 17; //Year
 	Write_DS1307();*/
 	
